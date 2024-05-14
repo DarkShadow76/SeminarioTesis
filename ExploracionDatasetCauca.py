@@ -9,10 +9,11 @@ Created on Tue Apr 16 09:44:21 2024
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.svm import SVC
+from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
+# from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import mean_squared_error, r2_score
 
 excel_file = "./Dataset_Year_2020.xlsx"
 data = pd.read_excel(excel_file)
@@ -65,24 +66,22 @@ plt.ylabel('Valores')
 plt.xticks(rotation=45)  # Rotar las etiquetas del eje x para una mejor visualización
 plt.show()
 
-# Dividir datos entre train y set
+# División de los datos en conjunto de entrenamiento y conjunto de prueba
 X = data.drop('Burned transformers 2020', axis=1)
 y = data['Burned transformers 2020']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Intancia de Clasificador
-svm_classifier = SVC(kernel='linear')
+# Instancia de Regresor de Vectores de Soporte (SVR)
+svm_regressor = SVR(kernel='linear')  # Usa SVR en lugar de SVC
 
-# Entrenamiento
-svm_classifier.fit(X_train, y_train)
+# Entrenamiento del modelo de regresión
+svm_regressor.fit(X_train, y_train)
 
+# Predicción en el conjunto de prueba
+y_pred = svm_regressor.predict(X_test)
 
-y_pred = svm_classifier.predict(X_test)
-
-# Calcular Precision
-accuracy = accuracy_score(y_test, y_pred)
-print("Precisión del modelo SVM:", accuracy)
-
-# Reporte
-print("\nReporte de clasificación:")
-print(classification_report(y_test, y_pred))
+# Evaluación del modelo de regresión
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+print("Error cuadrático medio (MSE):", mse)
+print("Coeficiente de determinación (R^2):", r2)
