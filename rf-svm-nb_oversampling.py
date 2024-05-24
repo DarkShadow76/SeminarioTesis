@@ -22,8 +22,8 @@ y = data['Burned transformers 2020'].astype(int)
 # Dividir los datos en train y test (80% - 20%) con estratificacion
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-# Aplicar BorderLine-Smote para oversampling
-borderline_smote = BorderlineSMOTE(sampling_strategy={1: y_train.value_counts()[0] + 2000})
+# Aplicar Borderline SMOTE para oversampling
+borderline_smote = BorderlineSMOTE(sampling_strategy={1: 2000})
 X_train_resampled, y_train_resampled = borderline_smote.fit_resample(X_train, y_train)
 
 # Imprimir los conteos de la variable objetivo después del undersampling
