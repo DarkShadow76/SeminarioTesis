@@ -9,9 +9,8 @@ from imblearn.under_sampling import NearMiss
 excel_file = "./Dataset_Year_2020.xlsx"
 data = pd.read_excel(excel_file)
 
-# Convertir las columnas categoricas en valores numericos (1 a N)
-data['Type of clients'] = pd.factorize(data['Type of clients'])[0] + 1
-data['Type of installation'] = pd.factorize(data['Type of installation'])[0] + 1
+# Aplicar One-Hot Encoding a las columnas categóricas
+data = pd.get_dummies(data, columns=['Type of clients', 'Type of installation'])
 
 # Definir las caracteristicas y la variable objetivo
 X = data.drop(columns=['Burned transformers 2020'])
