@@ -24,7 +24,7 @@ X = data.drop(columns=['Burned transformers 2020'])
 y = data['Burned transformers 2020'].astype(int)
 
 # Definir la cantidad de muestras adicionales que quieres generar
-desired_samples = 9000
+desired_samples = 10000
 
 # Calcular la proporción correspondiente
 total_minority_class = y.value_counts()[1] + desired_samples
