@@ -24,12 +24,14 @@ y = data['Burned transformers 2020'].astype(int)
 rus = RandomUnderSampler(sampling_strategy='majority', random_state=42)
 X_resampled, y_resampled = rus.fit_resample(X, y)
 
+# acc, precision, F1, recall
+
 # Actualizar el DataFrame con los datos undersampleados
 data = pd.concat([pd.DataFrame(X_resampled, columns=X.columns), 
                   pd.DataFrame(y_resampled, columns=['Burned transformers 2020'])], axis=1)
 
-print("Conteo de 'Burned transformers 2020' Después del undersampling")
-print(data['Burned transformers 2020'].value_counts())
+# print("Conteo de 'Burned transformers 2020' Después del undersampling")
+# print(data['Burned transformers 2020'].value_counts())
 
 # Variables binarias que no queremos estandarizar
 binary_columns = ['LOCATION', 'SELF-PROTECTION', 'Criticality according to previous study for ceramics level', 
@@ -50,15 +52,13 @@ data[float_columns] = scaler.fit_transform(data[float_columns])
 
 # Aplicar SelectKBest para seleccionar las mejores características
 selector = SelectKBest(chi2, k=10)  # Seleccionar las 10 mejores características
-selector.fit(X, y)
+selector.fit(X_resampled, y_resampled)
 
-# Imprimir las características seleccionadas
-selected_features = X.columns[selector.get_support()]
-print("Características seleccionadas:")
-print(selected_features)
+# Filtrar las características seleccionadas
+X_resampled_selected = selector.transform(X_resampled)
 
 # Separar los datos en conjuntos de entrenamiento y prueba
-X_train, X_test, y_train, y_test = train_test_split(data.drop(columns=['Burned transformers 2020']), data['Burned transformers 2020'], test_size=0.3, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_resampled_selected, y_resampled, test_size=0.3, random_state=42)
 
 # Entrenar y evaluar SVM
 svm = SVC(probability=True)
