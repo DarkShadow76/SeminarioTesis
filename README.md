@@ -3,5 +3,5 @@
 Ejecutar script principal
 
 ```
-python rf-svm-nb_undersampling-boostraping.py
+python rf_undersampling-boostraping.py
 ```
