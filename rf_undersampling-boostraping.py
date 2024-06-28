@@ -1,17 +1,47 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score, accuracy_score, recall_score, confusion_matrix, roc_auc_score, precision_score, classification_report
+import category_encoders as ce
 
 # Leer el archivo Excel
 excel_file = "./Dataset_Year_2020.xlsx"
 data = pd.read_excel(excel_file)
 
-# Aplicar One-Hot Encoding a las columnas categóricas
-data = pd.get_dummies(data, columns=['Type of clients', 'Type of installation'])
+# Definir las variables categóricas y la variable objetivo
+categorical_columns = ['Type of clients', 'Type of installation']
+target_column = 'Burned transformers 2020'
+
+# Definir la función para aplicar diferentes métodos de codificación
+def encode_data(data, method=''):
+    if method == 'one-hot':
+        return pd.get_dummies(data, columns=categorical_columns)
+    elif method == 'label':
+        label_encoders = {col: LabelEncoder() for col in categorical_columns}
+        for col, le in label_encoders.items():
+            data[col] = le.fit_transform(data[col])
+        return data
+    elif method == 'target':
+        target_encoder = ce.TargetEncoder(cols=categorical_columns)
+        return target_encoder.fit_transform(data, data[target_column])
+    elif method == 'frequency':
+        for col in categorical_columns:
+            data[col] = data[col].map(data[col].value_counts(normalize=True))
+        return data
+    elif method == 'leave-one-out':
+        loo_encoder = ce.LeaveOneOutEncoder(cols=categorical_columns)
+        return loo_encoder.fit_transform(data, data[target_column])
+    else:
+        raise ValueError("Método de codificación no soportado")
+
+# Elegir el método de codificación
+encoding_method = 'leave-one-out'  # Cambia esto a 'label', 'target', 'frequency', 'leave-one-out'
+
+# Aplicar el método de codificación seleccionado
+data = encode_data(data, method=encoding_method)
 
 # Variables binarias que no queremos estandarizar
 binary_columns = ['LOCATION', 'SELF-PROTECTION', 'Criticality according to previous study for ceramics level', 
@@ -23,35 +53,15 @@ non_binary_columns = [col for col in data.columns if col
                       and not col.startswith('Type of clients_') 
                       and not col.startswith('Type of installation_')]
 
-"""
-# Identificar y eliminar outliers usando IQR
-Q1 = data[non_binary_columns].quantile(0.25)
-Q3 = data[non_binary_columns].quantile(0.75)
-IQR = Q3 - Q1
-data = data[~((data[non_binary_columns] < (Q1 - 1.5 * IQR)) | (data[non_binary_columns] > (Q3 + 1.5 * IQR))).any(axis=1)]
-"""
-
 # Eliminar columnas específicas del dataset original
-# Aquí coloca los nombres de las columnas que quieres eliminar
 columns_to_drop = [
-    'Type of installation_TORRE METALICA',
-    'Type of installation_POLE WITH ANTI-FRAU NET',
-    'Type of installation_POLE',
-    'Type of installation_PAD MOUNTED',
-    'Type of installation_OTROS',
-    'Type of clients_STRATUM 6',
-    'Type of clients_STRATUM 5',
-    'Type of clients_STRATUM 4',
-    'Type of clients_STRATUM 3',
-    'Type of clients_STRATUM 2',
-    'Type of clients_STRATUM 1'
 ]
 
 data = data.drop(columns=columns_to_drop)
 
 # Definir las características y la variable objetivo después de eliminar columnas
-X = data.drop(columns=['Burned transformers 2020'])
-y = data['Burned transformers 2020'].astype(int)
+X = data.drop(columns=[target_column])
+y = data[target_column].astype(int)
 
 # Diccionario para acumular las métricas del modelo
 metrics = {
@@ -63,7 +73,7 @@ for i in range(100):
     # Aplicar RandomUnderSampler para undersampling en los datos
     rus = RandomUnderSampler(sampling_strategy={0: 503, 1: 503}, random_state=i)
     X_resampled, y_resampled = rus.fit_resample(X, y)
-    
+
     # Separar los datos en conjuntos de entrenamiento y prueba
     X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.3, random_state=i)
     
