@@ -54,7 +54,7 @@ metrics = {
 }
 
 # Realizar 100 iteraciones de muestreo aleatorio y entrenamiento
-for i in range(100):
+for i in range(50):
     # Aplicar RandomUnderSampler para undersampling
     rus = RandomUnderSampler(sampling_strategy={0: 503, 1: 503}, random_state=i)
     X_resampled, y_resampled = rus.fit_resample(X_selected, y)
